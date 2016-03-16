@@ -77,7 +77,7 @@ begin
   tb : process
   begin
     reset_n <= '0';
-    wait for 100 us; -- wait until global set/reset completes
+    wait for 100 ms; -- wait until global set/reset completes
     reset_n <= '1';
     -- add user defined stimulus here
 

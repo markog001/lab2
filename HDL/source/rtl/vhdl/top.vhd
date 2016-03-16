@@ -23,6 +23,10 @@ entity top is
   port (
     clk_i          : in  std_logic;
     reset_n_i      : in  std_logic;
+	 
+	 direct_mode_i  : in	 std_logic;
+	 display_mode_i : in  std_logic_vector(1 downto 0);
+	 
     -- vga
     vga_hsync_o    : out std_logic;
     vga_vsync_o    : out std_logic;
@@ -121,10 +125,26 @@ architecture rtl of top is
   );
   end component;
   
+  component reg
+	generic(
+		WIDTH    : positive := 1;
+		RST_INIT : integer := 0
+	);
+	port(
+		i_clk  : in  std_logic;
+		in_rst : in  std_logic;
+		i_d    : in  std_logic_vector(WIDTH-1 downto 0);
+		o_q    : out std_logic_vector(WIDTH-1 downto 0)
+	);
+	end component;
+  
   
   constant update_period     : std_logic_vector(31 downto 0) := conv_std_logic_vector(1, 32);
   
   constant GRAPH_MEM_ADDR_WIDTH : natural := MEM_ADDR_WIDTH + 6;-- graphics addres is scales with minumum char size 8*8 log2(64) = 6
+  
+  type ADDR_ARRAY is array (0 to 5) of std_logic_vector(5 downto 0);
+  signal text_to_screen : ADDR_ARRAY := ("00"&x"1", "00"&x"2", "00"&x"3", "00"&x"4", "00"&x"0", "00"&x"6");
   
   -- text
   signal message_lenght      : std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
@@ -156,6 +176,12 @@ architecture rtl of top is
   signal dir_blue            : std_logic_vector(7 downto 0);
   signal dir_pixel_column    : std_logic_vector(10 downto 0);
   signal dir_pixel_row       : std_logic_vector(10 downto 0);
+  
+  signal txt_addr_reg		: std_logic_vector(MEM_ADDR_WIDTH - 1 downto 0);
+  signal next_txt_addr		: std_logic_vector(MEM_ADDR_WIDTH - 1 downto 0);
+  signal graph_addr_reg		: std_logic_vector(GRAPH_MEM_ADDR_WIDTH - 1 downto 0);
+  signal next_graph_addr	: std_logic_vector(GRAPH_MEM_ADDR_WIDTH - 1 downto 0);
+  signal pixel_we_s 			: std_logic;
 
 begin
 
@@ -168,8 +194,11 @@ begin
   graphics_lenght <= conv_std_logic_vector(MEM_SIZE*8*8, GRAPH_MEM_ADDR_WIDTH);
   
   -- removed to inputs pin
-  direct_mode <= '1';
-  display_mode     <= "10";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
+--  direct_mode <= '1';
+--  display_mode     <= "10";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
+
+  direct_mode <= direct_mode_i;
+  display_mode <= display_mode_i;
   
   font_size        <= x"1";
   show_frame       <= '1';
@@ -246,20 +275,98 @@ begin
     blue_o             => blue_o     
   );
   
+  next_txt_addr <= txt_addr_reg + 1 when txt_addr_reg < 5 and txt_addr_reg > 0
+  else (others => '0');
+  
+  txt_addr_cnt: reg
+	generic map(
+		WIDTH    => MEM_ADDR_WIDTH,
+		RST_INIT => 1
+	)
+	port map(
+		i_clk  => pix_clock_s,
+		in_rst => vga_rst_n_s,
+		i_d    => next_txt_addr,
+		o_q    => txt_addr_reg
+	);
+	
+	next_graph_addr <= graph_addr_reg + 1 when graph_addr_reg < 9600
+	else conv_std_logic_vector(9600, GRAPH_MEM_ADDR_WIDTH);
+	
+	graph_addr_cnt: reg
+	generic map(
+		WIDTH    => GRAPH_MEM_ADDR_WIDTH,
+		RST_INIT => 0
+	)
+	port map(
+		i_clk  => pix_clock_s,
+		in_rst => vga_rst_n_s,
+		i_d    => next_graph_addr,
+		o_q    => graph_addr_reg
+	);
+  
+  
   -- na osnovu signala iz vga_top modula dir_pixel_column i dir_pixel_row realizovati logiku koja genereise
   --dir_red
   --dir_green
   --dir_blue
- 
+	dir_red <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
+		else 		x"00" when dir_pixel_column >=  80 	and dir_pixel_column < 240
+		else 		x"22" when dir_pixel_column >= 240 	and dir_pixel_column < 320
+		else 		x"33" when dir_pixel_column >= 320 	and dir_pixel_column < 400
+		else 		x"44" when dir_pixel_column >= 400 	and dir_pixel_column < 560
+		else 		x"66";
+		
+	dir_green <= 	x"00"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
+			else 		x"FF" when dir_pixel_column >=  80 	and dir_pixel_column < 160
+			else 		x"00" when dir_pixel_column >= 160 	and dir_pixel_column < 240
+			else 		x"33" when dir_pixel_column >= 240 	and dir_pixel_column < 320
+			else 		x"77" when dir_pixel_column >= 320 	and dir_pixel_column < 400
+			else 		x"a3" when dir_pixel_column >= 400 	and dir_pixel_column < 560
+			else 		x"15";
+
+	dir_blue <= 	x"00"	when dir_pixel_column >=   0 	and dir_pixel_column < 160
+			else 		x"FF" when dir_pixel_column >= 160 	and dir_pixel_column < 240
+			else 		x"92" when dir_pixel_column >= 240 	and dir_pixel_column < 320
+			else 		x"36" when dir_pixel_column >= 320 	and dir_pixel_column < 400
+			else 		x"24" when dir_pixel_column >= 400 	and dir_pixel_column < 560
+			else 		x"68";		
+		
+		
   -- koristeci signale realizovati logiku koja pise po TXT_MEM
   --char_address
   --char_value
   --char_we
+  --Ovde se po TXT_MEM pise ko po video memoriji, pa se to periodicno siba na ekran.
+  --TXT_MEM-u se pristupa u zavisnosti od rednog broja "kvadrata" u kom se nalazi karakter (8x8 ili sta je vec u font_size...),
+  --pocevsi od gornjeg levog ugla, pa do donjeg desnog, tj.
+  --adresa karaktera u TXT_MEM je proizvod tekuceg reda (0-479) + redni broj kolone, odnosno, kvadrata u tom redu (0-639)
+  
+  char_address <= txt_addr_reg;
+  char_value <= text_to_screen(conv_integer(txt_addr_reg));
+  char_we <= '1' when txt_addr_reg > 0
+  else '0';
+  
   
   -- koristeci signale realizovati logiku koja pise po GRAPH_MEM
   --pixel_address
   --pixel_value
   --pixel_we
   
+  pixel_value <= (others => '1') when	dir_pixel_row 		>	 79
+											and	dir_pixel_row 		< 	160
+											and	dir_pixel_column	>	159
+											and	dir_pixel_column	<	480
+	else (others => '0');
+	
+  pixel_we_s <= '1' when	dir_pixel_row 		>	 79
+						and	dir_pixel_row 		< 	160
+						and	dir_pixel_column	>	159
+						and	dir_pixel_column	<	480
+	else '0';
+	
+	pixel_we <= pixel_we_s when graph_addr_reg < 9600
+	else '0';
+	
   
 end rtl;

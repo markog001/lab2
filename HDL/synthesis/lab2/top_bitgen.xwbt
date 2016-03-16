@@ -1,8 +1,8 @@
 INTSTYLE=ise
-INFILE=D:\work\lprs2\2013_2014\Postavka\lab2\HDL\synthesis\lab2\top.ncd
-OUTFILE=D:\work\lprs2\2013_2014\Postavka\lab2\HDL\synthesis\lab2\top.bit
+INFILE=D:\Sa diska F na staroj masini\Projekcije i Programi\ISE\RA77-2013\lab2\HDL\synthesis\lab2\top.ncd
+OUTFILE=D:\Sa diska F na staroj masini\Projekcije i Programi\ISE\RA77-2013\lab2\HDL\synthesis\lab2\top.bit
 FAMILY=Spartan6
 PART=xc6slx45-2fgg676
-WORKINGDIR=D:\work\lprs2\2013_2014\Postavka\lab2\HDL\synthesis\lab2
-LICENSE=ISE
-USER_INFO=209858334_178080923_210552582_949
+WORKINGDIR=D:\Sa diska F na staroj masini\Projekcije i Programi\ISE\RA77-2013\lab2\HDL\synthesis\lab2
+LICENSE=WebPack
+USER_INFO=210961969_0_0_230

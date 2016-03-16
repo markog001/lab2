@@ -1,1 +1,1 @@
--intstyle "ise" -incremental -lib "secureip" -o "D:/work/lprs2/2013_2014/Postavka/lab2/HDL/synthesis/lab2/top_tb_isim_beh.exe" -prj "D:/work/lprs2/2013_2014/Postavka/lab2/HDL/synthesis/lab2/top_tb_beh.prj" "work.top_tb" 
+-intstyle "ise" -incremental -lib "secureip" -o "D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/HDL/synthesis/lab2/top_tb_isim_beh.exe" -prj "D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/HDL/synthesis/lab2/top_tb_beh.prj" "work.top_tb" 
