@@ -1,0 +1,88 @@
+###############################################################################
+#                               ULAZNI TAKT (24MHz) I RESET                   #
+###############################################################################
+ 
+NET "clk_i" LOC = M21;
+NET "clk_i" IOSTANDARD = LVTTL;
+# AKA UI_JOY2
+NET "reset_n_i" LOC = AE24;
+NET "reset_n_i" IOSTANDARD = LVCMOS33;
+
+NET "clk_i" TNM_NET = "clk_i";
+TIMESPEC TS_CLK = PERIOD "CLK" 41.667 ns HIGH 50 %;
+
+
+#NET direct_mode_i     LOC = W19;
+#NET display_mode_i(0) LOC = Y24;
+#NET display_mode_i(1) LOC = K19;
+
+NET "vga_hsync_o" LOC = B22;
+NET "vga_hsync_o" IOSTANDARD = LVTTL;
+NET "vga_vsync_o" LOC = A22;
+NET "vga_vsync_o" IOSTANDARD = LVTTL;
+
+NET "blank_o" LOC = B16;
+NET "blank_o" IOSTANDARD = LVTTL;
+NET "pix_clock_o" LOC = C14;
+NET "pix_clock_o" IOSTANDARD = LVTTL;
+NET "psave_o" LOC = A2;
+NET "psave_o" IOSTANDARD = LVTTL;
+NET "sync_o" LOC = A17;
+NET "sync_o" IOSTANDARD = LVTTL;
+
+NET "red_o[0]" LOC = B4;
+NET "red_o[0]" IOSTANDARD = LVTTL;
+NET "red_o[1]" LOC = A4;
+NET "red_o[1]" IOSTANDARD = LVTTL;
+NET "red_o[2]" LOC = A5;
+NET "red_o[2]" IOSTANDARD = LVTTL;
+NET "red_o[3]" LOC = B6;
+NET "red_o[3]" IOSTANDARD = LVTTL;
+NET "red_o[4]" LOC = A6;
+NET "red_o[4]" IOSTANDARD = LVTTL;
+NET "red_o[5]" LOC = A7;
+NET "red_o[5]" IOSTANDARD = LVTTL;
+NET "red_o[6]" LOC = B8;
+NET "red_o[6]" IOSTANDARD = LVTTL;
+NET "red_o[7]" LOC = A8;
+NET "red_o[7]" IOSTANDARD = LVTTL;
+
+NET "green_o[0]" LOC = A9;
+NET "green_o[0]" IOSTANDARD = LVTTL;
+NET "green_o[1]" LOC = A11;
+NET "green_o[1]" IOSTANDARD = LVTTL;
+NET "green_o[2]" LOC = B12;
+NET "green_o[2]" IOSTANDARD = LVTTL;
+NET "green_o[3]" LOC = A12;
+NET "green_o[3]" IOSTANDARD = LVTTL;
+NET "green_o[4]" LOC = N17;
+NET "green_o[4]" IOSTANDARD = LVTTL;
+NET "green_o[5]" LOC = A13;
+NET "green_o[5]" IOSTANDARD = LVTTL;
+NET "green_o[6]" LOC = N18;
+NET "green_o[6]" IOSTANDARD = LVTTL;
+NET "green_o[7]" LOC = A16;
+NET "green_o[7]" IOSTANDARD = LVTTL;
+
+NET "blue_o[0]" LOC = A18;
+NET "blue_o[0]" IOSTANDARD = LVTTL;
+NET "blue_o[1]" LOC = B18;
+NET "blue_o[1]" IOSTANDARD = LVTTL;
+NET "blue_o[2]" LOC = L17;
+NET "blue_o[2]" IOSTANDARD = LVTTL;
+NET "blue_o[3]" LOC = M18;
+NET "blue_o[3]" IOSTANDARD = LVTTL;
+NET "blue_o[4]" LOC = C18;
+NET "blue_o[4]" IOSTANDARD = LVTTL;
+NET "blue_o[5]" LOC = K18;
+NET "blue_o[5]" IOSTANDARD = LVTTL;
+NET "blue_o[6]" LOC = C19;
+NET "blue_o[6]" IOSTANDARD = LVTTL;
+NET "blue_o[7]" LOC = C20;
+NET "blue_o[7]" IOSTANDARD = LVTTL;
+
+# PlanAhead Generated physical constraints 
+
+NET "direct_mode_i" LOC = W19;
+NET "display_mode_i[1]" LOC = K19;
+NET "display_mode_i[0]" LOC = Y24;

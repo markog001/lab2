@@ -198,7 +198,6 @@ WARNING:Xst:3035 - Index value(s) does not match array range for signal <text_to
     Found 6x6-bit single-port Read Only RAM <Mram_text_to_screen> for signal <text_to_screen>.
     Found 14-bit adder for signal <txt_addr_reg[13]_GND_5_o_add_13_OUT> created at line 278.
     Found 20-bit adder for signal <graph_addr_reg[19]_GND_5_o_add_16_OUT> created at line 293.
-    Found 14-bit comparator greater for signal <txt_addr_reg[13]_GND_5_o_LessThan_13_o> created at line 278
     Found 11-bit comparator greater for signal <dir_pixel_column[10]_GND_5_o_LessThan_19_o> created at line 321
     Found 11-bit comparator greater for signal <dir_pixel_column[10]_GND_5_o_LessThan_21_o> created at line 322
     Found 11-bit comparator greater for signal <dir_pixel_column[10]_GND_5_o_LessThan_23_o> created at line 323
@@ -206,7 +205,8 @@ WARNING:Xst:3035 - Index value(s) does not match array range for signal <text_to
     Found 11-bit comparator greater for signal <dir_pixel_column[10]_GND_5_o_LessThan_27_o> created at line 325
     Found 11-bit comparator greater for signal <dir_pixel_column[10]_GND_5_o_LessThan_29_o> created at line 326
     Found 11-bit comparator greater for signal <dir_pixel_column[10]_GND_5_o_LessThan_67_o> created at line 345
-    Found 14-bit comparator greater for signal <char_we> created at line 359
+    Found 14-bit comparator greater for signal <txt_addr_reg[13]_GND_5_o_LessThan_76_o> created at line 359
+    Found 14-bit comparator greater for signal <char_we> created at line 361
     Found 11-bit comparator greater for signal <GND_5_o_dir_pixel_row[10]_LessThan_80_o> created at line 370
     Found 11-bit comparator greater for signal <dir_pixel_row[10]_GND_5_o_LessThan_81_o> created at line 371
     Found 11-bit comparator greater for signal <GND_5_o_dir_pixel_column[10]_LessThan_82_o> created at line 372
@@ -591,7 +591,6 @@ WARNING:Xst:1710 - FF/Latch <graph_addr_cnt/r_q_16> (without init value) has a c
 WARNING:Xst:1710 - FF/Latch <graph_addr_cnt/r_q_17> (without init value) has a constant value of 0 in block <top>. This FF/Latch will be trimmed during the optimization process.
 WARNING:Xst:1710 - FF/Latch <graph_addr_cnt/r_q_18> (without init value) has a constant value of 0 in block <top>. This FF/Latch will be trimmed during the optimization process.
 WARNING:Xst:1710 - FF/Latch <graph_addr_cnt/r_q_19> (without init value) has a constant value of 0 in block <top>. This FF/Latch will be trimmed during the optimization process.
-WARNING:Xst:1710 - FF/Latch <txt_addr_cnt/r_q_10> (without init value) has a constant value of 0 in block <top>. This FF/Latch will be trimmed during the optimization process.
 WARNING:Xst:1710 - FF/Latch <txt_addr_cnt/r_q_11> (without init value) has a constant value of 0 in block <top>. This FF/Latch will be trimmed during the optimization process.
 WARNING:Xst:1710 - FF/Latch <txt_addr_cnt/r_q_12> (without init value) has a constant value of 0 in block <top>. This FF/Latch will be trimmed during the optimization process.
 WARNING:Xst:1710 - FF/Latch <txt_addr_cnt/r_q_13> (without init value) has a constant value of 0 in block <top>. This FF/Latch will be trimmed during the optimization process.
@@ -616,8 +615,8 @@ Final Macro Processing ...
 Final Register Report
 
 Macro Statistics
-# Registers                                            : 60
- Flip-Flops                                            : 60
+# Registers                                            : 61
+ Flip-Flops                                            : 61
 
 =========================================================================
 
@@ -640,22 +639,22 @@ Top Level Output File Name         : top.ngc
 
 Primitive and Black Box Usage:
 ------------------------------
-# BELS                             : 210
+# BELS                             : 213
 #      GND                         : 2
 #      INV                         : 5
-#      LUT1                        : 19
-#      LUT2                        : 27
-#      LUT3                        : 11
-#      LUT4                        : 4
+#      LUT1                        : 18
+#      LUT2                        : 32
+#      LUT3                        : 12
+#      LUT4                        : 5
 #      LUT5                        : 7
-#      LUT6                        : 48
-#      MUXCY                       : 40
+#      LUT6                        : 43
+#      MUXCY                       : 41
 #      MUXF7                       : 1
 #      VCC                         : 2
-#      XORCY                       : 44
-# FlipFlops/Latches                : 62
+#      XORCY                       : 45
+# FlipFlops/Latches                : 63
 #      FD                          : 2
-#      FDC                         : 24
+#      FDC                         : 25
 #      FDR                         : 19
 #      FDRE                        : 13
 #      FDS                         : 2
@@ -683,17 +682,17 @@ Selected Device : 6slx45fgg676-2
 
 
 Slice Logic Utilization: 
- Number of Slice Registers:              62  out of  54576     0%  
- Number of Slice LUTs:                  122  out of  27288     0%  
-    Number used as Logic:               121  out of  27288     0%  
+ Number of Slice Registers:              63  out of  54576     0%  
+ Number of Slice LUTs:                  123  out of  27288     0%  
+    Number used as Logic:               122  out of  27288     0%  
     Number used as Memory:                1  out of   6408     0%  
        Number used as SRL:                1
 
 Slice Logic Distribution: 
- Number of LUT Flip Flop pairs used:    139
-   Number with an unused Flip Flop:      77  out of    139    55%  
-   Number with an unused LUT:            17  out of    139    12%  
-   Number of fully used LUT-FF pairs:    45  out of    139    32%  
+ Number of LUT Flip Flop pairs used:    140
+   Number with an unused Flip Flop:      77  out of    140    55%  
+   Number with an unused LUT:            17  out of    140    12%  
+   Number of fully used LUT-FF pairs:    46  out of    140    32%  
    Number of unique control sets:         8
 
 IO Utilization: 
@@ -727,7 +726,7 @@ Clock Information:
 ---------------------------------------------------------------------------------------------------------------+----------------------------------+-------+
 Clock Signal                                                                                                   | Clock buffer(FF name)            | Load  |
 ---------------------------------------------------------------------------------------------------------------+----------------------------------+-------+
-clk_i                                                                                                          | DCM_SP:CLKFX                     | 70    |
+clk_i                                                                                                          | DCM_SP:CLKFX                     | 71    |
 vga_top_i/display_mode_i[1]_display_mode_i[1]_OR_22_o(vga_top_i/display_mode_i[1]_display_mode_i[1]_OR_22_o1:O)| NONE(*)(vga_top_i/active_pixel_s)| 1     |
 ---------------------------------------------------------------------------------------------------------------+----------------------------------+-------+
 (*) This 1 clock signal(s) are generated by combinatorial logic,
@@ -755,7 +754,7 @@ All values displayed in nanoseconds (ns)
 =========================================================================
 Timing constraint: Default period analysis for Clock 'clk_i'
   Clock period: 9.543ns (frequency: 104.793MHz)
-  Total number of paths / destination ports: 5888 / 261
+  Total number of paths / destination ports: 6008 / 266
 -------------------------------------------------------------------------
 Delay:               10.306ns (Levels of Logic = 3)
   Source:            vga_top_i/vga_i/vga_sync_i/v_count_r_8 (FF)
@@ -861,13 +860,13 @@ clk_i          |         |         |    4.563|         |
 
 
 Total REAL time to Xst completion: 8.00 secs
-Total CPU time to Xst completion: 8.05 secs
+Total CPU time to Xst completion: 8.06 secs
  
 --> 
 
-Total memory usage is 281088 kilobytes
+Total memory usage is 281024 kilobytes
 
 Number of errors   :    0 (   0 filtered)
-Number of warnings :   31 (   0 filtered)
+Number of warnings :   30 (   0 filtered)
 Number of infos    :   39 (   0 filtered)
 
