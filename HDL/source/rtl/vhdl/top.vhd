@@ -275,13 +275,13 @@ begin
     blue_o             => blue_o     
   );
   
-  next_txt_addr <= txt_addr_reg + 1 when txt_addr_reg < 5 and txt_addr_reg > 0
-  else (others => '0');
+  next_txt_addr <= txt_addr_reg + 1 when txt_addr_reg < 1200
+  else conv_std_logic_vector(1001, MEM_ADDR_WIDTH);
   
   txt_addr_cnt: reg
 	generic map(
 		WIDTH    => MEM_ADDR_WIDTH,
-		RST_INIT => 1
+		RST_INIT => 0
 	)
 	port map(
 		i_clk  => pix_clock_s,
@@ -304,33 +304,46 @@ begin
 		i_d    => next_graph_addr,
 		o_q    => graph_addr_reg
 	);
-  
+
+--FFFFFF
+--FFFF00
+--00FFFF
+--00FF00
+--FF00FF
+--FF0000
+--0000FF
+--000000
   
   -- na osnovu signala iz vga_top modula dir_pixel_column i dir_pixel_row realizovati logiku koja genereise
   --dir_red
   --dir_green
   --dir_blue
 	dir_red <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
-		else 		x"00" when dir_pixel_column >=  80 	and dir_pixel_column < 240
-		else 		x"22" when dir_pixel_column >= 240 	and dir_pixel_column < 320
-		else 		x"33" when dir_pixel_column >= 320 	and dir_pixel_column < 400
-		else 		x"44" when dir_pixel_column >= 400 	and dir_pixel_column < 560
-		else 		x"66";
-		
-	dir_green <= 	x"00"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
 			else 		x"FF" when dir_pixel_column >=  80 	and dir_pixel_column < 160
 			else 		x"00" when dir_pixel_column >= 160 	and dir_pixel_column < 240
-			else 		x"33" when dir_pixel_column >= 240 	and dir_pixel_column < 320
-			else 		x"77" when dir_pixel_column >= 320 	and dir_pixel_column < 400
-			else 		x"a3" when dir_pixel_column >= 400 	and dir_pixel_column < 560
-			else 		x"15";
-
-	dir_blue <= 	x"00"	when dir_pixel_column >=   0 	and dir_pixel_column < 160
+			else 		x"00" when dir_pixel_column >= 240 	and dir_pixel_column < 320
+			else 		x"FF" when dir_pixel_column >= 320 	and dir_pixel_column < 400
+			else 		x"FF" when dir_pixel_column >= 400 	and dir_pixel_column < 480
+			else 		x"00" when dir_pixel_column >= 480 	and dir_pixel_column < 560
+			else 		x"00";
+		
+	dir_green <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
+			else 		x"FF" when dir_pixel_column >=  80 	and dir_pixel_column < 160
 			else 		x"FF" when dir_pixel_column >= 160 	and dir_pixel_column < 240
-			else 		x"92" when dir_pixel_column >= 240 	and dir_pixel_column < 320
-			else 		x"36" when dir_pixel_column >= 320 	and dir_pixel_column < 400
-			else 		x"24" when dir_pixel_column >= 400 	and dir_pixel_column < 560
-			else 		x"68";		
+			else 		x"FF" when dir_pixel_column >= 240 	and dir_pixel_column < 320
+			else 		x"00" when dir_pixel_column >= 320 	and dir_pixel_column < 400
+			else 		x"00" when dir_pixel_column >= 400 	and dir_pixel_column < 480
+			else 		x"00" when dir_pixel_column >= 480 	and dir_pixel_column < 560
+			else 		x"00";
+
+	dir_blue <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
+			else 		x"00" when dir_pixel_column >=  80 	and dir_pixel_column < 160
+			else 		x"FF" when dir_pixel_column >= 160 	and dir_pixel_column < 240
+			else 		x"00" when dir_pixel_column >= 240 	and dir_pixel_column < 320
+			else 		x"FF" when dir_pixel_column >= 320 	and dir_pixel_column < 400
+			else 		x"00" when dir_pixel_column >= 400 	and dir_pixel_column < 480
+			else 		x"FF" when dir_pixel_column >= 480 	and dir_pixel_column < 560
+			else 		x"00";	
 		
 		
   -- koristeci signale realizovati logiku koja pise po TXT_MEM
@@ -343,8 +356,9 @@ begin
   --adresa karaktera u TXT_MEM je proizvod tekuceg reda (0-479) + redni broj kolone, odnosno, kvadrata u tom redu (0-639)
   
   char_address <= txt_addr_reg;
-  char_value <= text_to_screen(conv_integer(txt_addr_reg));
-  char_we <= '1' when txt_addr_reg > 0
+  char_value <= text_to_screen(conv_integer(txt_addr_reg)) when txt_addr_reg < 6
+  else "100000";
+  char_we <= '1' when txt_addr_reg < 1200
   else '0';
   
   

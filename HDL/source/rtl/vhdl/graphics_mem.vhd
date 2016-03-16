@@ -33,6 +33,20 @@ end entity;
 
 architecture arc_graphics_mem of graphics_mem is
 
+	component reg
+	generic(
+		WIDTH    : positive := 1;
+		RST_INIT : integer := 0
+	);
+	port(
+		i_clk  : in  std_logic;
+		in_rst : in  std_logic;
+		i_d    : in  std_logic_vector(WIDTH-1 downto 0);
+		o_q    : out std_logic_vector(WIDTH-1 downto 0)
+	);
+	end component;
+  
+
   type t_graphics_mem  is array (0 to MEM_SIZE/MEM_DATA_WIDTH-1) of  std_logic_vector(MEM_DATA_WIDTH-1 downto 0);
 
   signal graphics_mem : t_graphics_mem := (
@@ -43,6 +57,8 @@ architecture arc_graphics_mem of graphics_mem is
         );
   signal mem_up_addr : std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
   signal mem_lo_addr : std_logic_vector(5-1 downto 0);
+  signal mem_lo_addr_d1	: std_logic_vector(5-1 downto 0);
+  
   
   signal rd_value : std_logic_vector(MEM_DATA_WIDTH-1 downto 0);
   
@@ -83,7 +99,19 @@ begin
   index_0_t <= conv_integer(mem_up_addr);
   index_0   <= index_0_t when (index_0_t < graphics_mem'length) else 0;
   
-  index_1_t <= conv_integer(mem_lo_addr);
+  memloreg : reg
+	generic map(
+		WIDTH    => 5,
+		RST_INIT => 0
+	)
+	port map(
+		i_clk  => clk_i,
+		in_rst => reset_n_i,
+		i_d    => mem_lo_addr,
+		o_q    => mem_lo_addr_d1
+	);
+  
+  index_1_t <= conv_integer(mem_lo_addr_d1);
   index_1   <= index_1_t when (index_1_t < graphics_mem'length) else 0;
   
   index_2_t <= conv_integer(wr_addr_i);
