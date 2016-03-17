@@ -32,6 +32,12 @@ architecture behavior of top_tb is
     --
     direct_mode_i  : in  std_logic;
     display_mode_i : in  std_logic_vector(1 downto 0);
+	 
+	 tst_left_i		 : in	 std_logic;
+	 tst_right_i	 : in  std_logic;
+	 tst_up_i		 : in  std_logic;
+	 tst_down_i		 : in  std_logic;
+	 
     -- vga
     vga_hsync_o    : out std_logic;
     vga_vsync_o    : out std_logic;
@@ -47,6 +53,10 @@ architecture behavior of top_tb is
 
   signal clk     : std_logic;
   signal reset_n : std_logic;
+  signal tst_up	: std_logic;
+  signal tst_down : std_logic;
+  signal tst_left : std_logic;
+  signal tst_right: std_logic;
 
 begin
 
@@ -70,14 +80,23 @@ begin
     reset_n_i      => reset_n,
     --
     direct_mode_i  => '0',
-    display_mode_i => "10"
+    display_mode_i => "00",
+	 
+	 tst_left_i => tst_left,
+	 tst_right_i => tst_right,
+	 tst_up_i => tst_up,
+	 tst_down_i => tst_down
   );
 
   --  test bench statements
   tb : process
   begin
     reset_n <= '0';
-    wait for 100 ms; -- wait until global set/reset completes
+	 tst_left <= '0';
+	 tst_right <= '0';
+	 tst_up <= '0';
+	 tst_down <= '0';
+    wait for 100 ns; -- wait until global set/reset completes
     reset_n <= '1';
     -- add user defined stimulus here
 

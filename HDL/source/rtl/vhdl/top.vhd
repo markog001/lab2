@@ -18,7 +18,10 @@ entity top is
   generic (
     RES_TYPE             : natural := 1;
     TEXT_MEM_DATA_WIDTH  : natural := 6;
-    GRAPH_MEM_DATA_WIDTH : natural := 32
+    GRAPH_MEM_DATA_WIDTH : natural := 32;
+	 START_ROW_POS			 : natural := 12;
+	 START_COL_POS			 : natural := 12;
+	 SQUARE_DIM				 : natural := 10
     );
   port (
     clk_i          : in  std_logic;
@@ -26,6 +29,11 @@ entity top is
 	 
 	 direct_mode_i  : in	 std_logic;
 	 display_mode_i : in  std_logic_vector(1 downto 0);
+	 
+	 tst_left_i		 : in	 std_logic;
+	 tst_right_i	 : in  std_logic;
+	 tst_up_i		 : in  std_logic;
+	 tst_down_i		 : in  std_logic;
 	 
     -- vga
     vga_hsync_o    : out std_logic;
@@ -144,7 +152,7 @@ architecture rtl of top is
   constant GRAPH_MEM_ADDR_WIDTH : natural := MEM_ADDR_WIDTH + 6;-- graphics addres is scales with minumum char size 8*8 log2(64) = 6
   
   type ADDR_ARRAY is array (0 to 5) of std_logic_vector(5 downto 0);
-  signal text_to_screen : ADDR_ARRAY := ("00"&x"1", "00"&x"2", "00"&x"3", "00"&x"4", "00"&x"0", "00"&x"6");
+  signal text_to_screen : ADDR_ARRAY := ("00"&x"1", "00"&x"2", "00"&x"3", "00"&x"4", "00"&x"5", "00"&x"6");
   
   -- text
   signal message_lenght      : std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
@@ -182,6 +190,59 @@ architecture rtl of top is
   signal graph_addr_reg		: std_logic_vector(GRAPH_MEM_ADDR_WIDTH - 1 downto 0);
   signal next_graph_addr	: std_logic_vector(GRAPH_MEM_ADDR_WIDTH - 1 downto 0);
   signal pixel_we_s 			: std_logic;
+  
+  signal row_cnt_reg 		: std_logic_vector(10 downto 0);
+  signal next_row_cnt		: std_logic_vector(10 downto 0);
+  signal col_cnt_reg			: std_logic_vector(4 downto 0);
+  signal next_col_cnt		: std_logic_vector(4 downto 0);
+  
+  signal row_cnt_s 			: std_logic;
+  
+  signal clk_dev_reg			: std_logic_vector(21 downto 0);
+  signal next_clk_dev		: std_logic_vector(21 downto 0);
+  signal clk_dev				: std_logic;
+  
+
+  
+  signal next_text_hor		: std_logic_vector(11 downto 0);
+  signal next_text_hor_tmp	: std_logic_vector(11 downto 0);
+  signal text_hor_reg		: std_logic_vector(11 downto 0);
+  signal text_hor_add		: std_logic_vector(11 downto 0);
+  signal text_hor_sub		: std_logic_vector(11 downto 0);
+  signal text_hor_add_bound		: std_logic_vector(11 downto 0);
+  signal text_hor_sub_bound		: std_logic_vector(11 downto 0);
+  
+  signal next_text_ver		: std_logic_vector(11 downto 0);
+  signal next_text_ver_tmp	: std_logic_vector(11 downto 0);
+  signal text_ver_reg		: std_logic_vector(11 downto 0);
+  signal text_ver_add		: std_logic_vector(11 downto 0);
+  signal text_ver_sub		: std_logic_vector(11 downto 0);
+  signal text_ver_add_bound		: std_logic_vector(11 downto 0);
+  signal text_ver_sub_bound		: std_logic_vector(11 downto 0);
+  
+  signal right_shift_reg 	: std_logic_vector(11 downto 0);
+  signal next_right_shift	: std_logic_vector(11 downto 0);
+  signal next_right_shift_tmp	: std_logic_vector(11 downto 0);
+  signal left_shift_reg		: std_logic_vector(11 downto 0);
+  signal next_left_shift	: std_logic_vector(11 downto 0);
+  signal next_left_shift_tmp	: std_logic_vector(11 downto 0);
+  
+  signal hor_graph_reg 			: std_logic_vector(11 downto 0);
+  signal next_hor_graph			: std_logic_vector(11 downto 0);
+  signal next_hor_graph_tmp	: std_logic_vector(11 downto 0);
+  signal next_hor_graph_add		: std_logic_vector(11 downto 0);
+  signal next_hor_graph_sub	: std_logic_vector(11 downto 0);
+  signal hor_graph_add_bound	: std_logic_vector(11 downto 0);
+  signal hor_graph_sub_bound	: std_logic_vector(11 downto 0);
+  
+  signal arr_ind_reg			: std_logic_vector(5 downto 0);
+  signal next_arr_ind		: std_logic_vector(5 downto 0);
+  signal writing_text_on	: std_logic;
+
+  signal next_graph_clk_div: std_logic_vector(4 downto 0);
+  signal graph_clk_div_reg : std_logic_vector(4 downto 0);
+  signal pix_clock_s_32		: std_logic;
+  signal pixel_value_tmp	: std_logic_vector(31 downto 0) := (others => '0');
 
 begin
 
@@ -275,8 +336,8 @@ begin
     blue_o             => blue_o     
   );
   
-  next_txt_addr <= txt_addr_reg + 1 when txt_addr_reg < 1200
-  else conv_std_logic_vector(1001, MEM_ADDR_WIDTH);
+  next_txt_addr <= txt_addr_reg + 1 when txt_addr_reg < (V_RES / 16) * (H_RES / 16)--1200
+  else conv_std_logic_vector((V_RES / 16) * (H_RES / 16) + 1, MEM_ADDR_WIDTH);
   
   txt_addr_cnt: reg
 	generic map(
@@ -285,7 +346,7 @@ begin
 	)
 	port map(
 		i_clk  => pix_clock_s,
-		in_rst => vga_rst_n_s,
+		in_rst => vga_rst_n_s and tst_left_i and tst_right_i and tst_up_i and tst_down_i,
 		i_d    => next_txt_addr,
 		o_q    => txt_addr_reg
 	);
@@ -300,10 +361,245 @@ begin
 	)
 	port map(
 		i_clk  => pix_clock_s,
-		in_rst => vga_rst_n_s,
+		in_rst => vga_rst_n_s and tst_left_i and tst_right_i,
 		i_d    => next_graph_addr,
 		o_q    => graph_addr_reg
 	);
+	
+		--usporava pix_clock_s 32 puta, zbog indeksiranja bita
+	graph_clock_div: reg
+	generic map(
+		WIDTH    => 5,
+		RST_INIT => 0
+	)
+	port map(
+		i_clk  => pix_clock_s,
+		in_rst => vga_rst_n_s and tst_left_i and tst_right_i,
+		i_d    => next_graph_clk_div,
+		o_q    => graph_clk_div_reg
+	);
+	
+	next_graph_clk_div <= graph_clk_div_reg + 1; 
+	
+	pix_clock_s_32 <= '1' when graph_clk_div_reg = 31
+	else '0';
+
+	
+	next_col_cnt <= col_cnt_reg + 1 when col_cnt_reg < 19
+	else (others => '0') when row_cnt_reg < 479
+	else conv_std_logic_vector(20, 5);
+	
+	graph_col_cnt: reg
+	generic map(
+		WIDTH    => 5,
+		RST_INIT => 0
+	)
+	port map(
+		i_clk  => pix_clock_s,
+		in_rst => vga_rst_n_s and tst_left_i and tst_right_i,
+		i_d    => next_col_cnt,
+		o_q    => col_cnt_reg
+	);
+	
+	next_row_cnt <= row_cnt_reg + 1 when row_cnt_reg < 479
+	else conv_std_logic_vector(480, 11);
+	
+	row_cnt_s <= '1' when col_cnt_reg = 19
+	else '0';
+	
+	graph_row_cnt: reg
+	generic map(
+		WIDTH    => 11,
+		RST_INIT => 0
+	)
+	port map(
+		i_clk  => row_cnt_s,
+		in_rst => vga_rst_n_s and tst_left_i and tst_right_i,
+		i_d    => next_row_cnt,
+		o_q    => row_cnt_reg
+	);
+	
+	
+	--svakih 100ms
+	next_clk_dev <= clk_dev_reg + 1 when clk_dev_reg < 10000000
+	else (others => '0');
+	
+	clk_devide_reg : reg
+	generic map(
+		WIDTH    => 22,
+		RST_INIT => 0
+	)
+	port map(
+		i_clk  => pix_clock_s_32,
+		in_rst => reset_n_i,
+		i_d    => next_clk_dev,
+		o_q    => clk_dev_reg
+	);
+	
+	clk_dev <= '1' when clk_dev_reg = 10000000
+	else '0';
+	
+	
+-----------------------------------------------------------------------------------------------
+--													POMERANJE TEKSTA													--
+-----------------------------------------------------------------------------------------------
+
+--Potrebna su dva registra, jedan za horizontalnu, a drugi za vertikalnu poziciju.
+--Njihova reset vrednost zadaje se iz generic-a.
+--Uveæavaju se za 1 (ili smanjuju) pritiskom na tastere up, down, left i right.
+--Ne sme se dozvoliti da vrednost bude manja od 0, niti veæa od 39 za horizontalu i 29 za vertikalu, uzevsi u obzir poslednji karakter.
+	
+	--registar pomeraja teksta horizontalno
+	text_hor_pos : reg
+	generic map(
+		WIDTH    => 12,
+		RST_INIT => START_COL_POS
+	)
+	port map(
+		i_clk  => clk_dev,
+		in_rst => reset_n_i,
+		i_d    => next_text_hor,
+		o_q    => text_hor_reg
+	);
+	
+	text_hor_add <= text_hor_reg + 1 when tst_right_i = '0'
+	else text_hor_reg;
+	
+		--provera da li je poslednji znak na desnom kraju ekrana
+	text_hor_add_bound <= text_hor_add when text_hor_reg + 6 < H_RES / 16 - 1
+	else text_hor_reg;
+	
+	text_hor_sub <= text_hor_reg - 1 when tst_left_i = '0'
+	else text_hor_reg;
+	
+		--provera da li je prvi znak na levom kraju ekrana
+	text_hor_sub_bound <= text_hor_sub when text_hor_reg > 0
+	else text_hor_reg;
+	
+	next_text_hor_tmp <= text_hor_add_bound when tst_right_i = '0'
+	else 				  		text_hor_sub_bound when tst_left_i = '0'
+	else	text_hor_reg;
+	
+		--provera da li je u text modu
+	next_text_hor <= next_text_hor_tmp when display_mode = "01"
+	else 	text_hor_reg;
+	
+	
+	--registar pomeraja teksta vertikalno
+	text_row_pos : reg
+	generic map(
+		WIDTH    => 12,
+		RST_INIT => START_ROW_POS
+	)
+	port map(
+		i_clk  => clk_dev,
+		in_rst => reset_n_i,
+		i_d    => next_text_ver,
+		o_q    => text_ver_reg
+	);
+	
+	text_ver_add <= text_ver_reg + 1 when tst_down_i = '0'
+	else text_ver_reg;
+	
+		--provera da li je tekst na donjem kraju ekrana
+	text_ver_add_bound <= text_ver_add when text_ver_reg < V_RES / 16 - 1
+	else text_ver_reg;
+	
+	text_ver_sub <= text_ver_reg - 1 when tst_up_i = '0'
+	else text_ver_reg;
+	
+		--provera da li je tekst na gornjem kraju ekrana
+	text_ver_sub_bound <= text_ver_sub when text_ver_reg > 0
+	else text_ver_reg;
+	
+	next_text_ver_tmp <= text_ver_add_bound when tst_down_i = '0'
+	else 				  text_ver_sub_bound when tst_up_i = '0'
+	else	text_ver_reg;
+	
+		--provera da li je u text modu
+	next_text_ver <= next_text_ver_tmp when display_mode = "01"
+	else 	text_ver_reg;
+	
+-----------------------------------------------------------------------------------------------
+--													POMERANJE KVADRATA												--
+-----------------------------------------------------------------------------------------------
+	
+	--registar horizontalne pozicije kvadrata
+	hor_graphic_reg : reg
+	generic map(
+		WIDTH    => 12,
+		RST_INIT => H_RES / 2 - SQUARE_DIM / 2
+	)
+	port map(
+		i_clk  => clk_dev,
+		in_rst => reset_n_i,
+		i_d    => next_hor_graph,
+		o_q    => hor_graph_reg
+	);
+	
+	next_hor_graph_add <= hor_graph_reg + 8 when tst_right_i = '0'
+	else hor_graph_reg;
+	
+		--provera da li se desna ivica kvadrata nalazi u blizini desne ivice ekrana
+	hor_graph_add_bound <= next_hor_graph_add when next_hor_graph_add + SQUARE_DIM < H_RES
+	else hor_graph_reg;
+	
+	next_hor_graph_sub <= hor_graph_reg - 8 when tst_left_i = '0'
+	else hor_graph_reg;
+	
+		--provera da li se leva ivica kvadrata nalazi u blizini leve ivice ekrana
+	hor_graph_sub_bound <= next_hor_graph_sub when next_hor_graph_sub > 0
+	else hor_graph_reg;
+	
+	next_hor_graph_tmp <= next_hor_graph_add when tst_right_i = '0'
+	else						 next_hor_graph_sub when tst_left_i  = '0'
+	else hor_graph_reg;
+	
+	next_hor_graph <= next_hor_graph_tmp when display_mode = "10"
+	else hor_graph_reg;
+	
+	
+--	--registar desnog pomeranja kvadrata
+--	next_right_shift_tmp <= right_shift_reg + 1 when tst_right_i = '1'
+--	else 	right_shift_reg;
+--	
+--		--provera da li je dostigao maksimum
+--	
+--		--provera da li je u graphic modu
+--	next_right_shift <= next_right_shift_tmp when display_mode = "10"
+--	else right_shift_reg;
+--	
+--	right_sh_reg : reg
+--	generic map(
+--		WIDTH    => 12,
+--		RST_INIT => 0
+--	)
+--	port map(
+--		i_clk  => clk_dev,
+--		in_rst => reset_n_i,
+--		i_d    => next_right_shift,
+--		o_q    => right_shift_reg
+--	);
+--	
+--	--registar levog pomeranja kvadrata
+--	next_left_shift_tmp <= left_shift_reg + 1 when tst_left_i = '1'
+--	else 	left_shift_reg;
+--	
+--	--provera da li je u graphic modu
+--	next_left_shift <= next_left_shift_tmp when display_mode = "10"
+--	else left_shift_reg;
+--	
+--	left_sh_reg : reg
+--	generic map(
+--		WIDTH    => 12,
+--		RST_INIT => 0
+--	)
+--	port map(
+--		i_clk  => clk_dev,
+--		in_rst => reset_n_i,
+--		i_d    => next_left_shift,
+--		o_q    => left_shift_reg
+--	);
 
 --FFFFFF
 --FFFF00
@@ -318,47 +614,104 @@ begin
   --dir_red
   --dir_green
   --dir_blue
-	dir_red <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
-			else 		x"FF" when dir_pixel_column >=  80 	and dir_pixel_column < 160
-			else 		x"00" when dir_pixel_column >= 160 	and dir_pixel_column < 240
-			else 		x"00" when dir_pixel_column >= 240 	and dir_pixel_column < 320
-			else 		x"FF" when dir_pixel_column >= 320 	and dir_pixel_column < 400
-			else 		x"FF" when dir_pixel_column >= 400 	and dir_pixel_column < 480
-			else 		x"00" when dir_pixel_column >= 480 	and dir_pixel_column < 560
+--	dir_red <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
+--			else 		x"FF" when dir_pixel_column >=  80 	and dir_pixel_column < 160
+--			else 		x"00" when dir_pixel_column >= 160 	and dir_pixel_column < 240
+--			else 		x"00" when dir_pixel_column >= 240 	and dir_pixel_column < 320
+--			else 		x"FF" when dir_pixel_column >= 320 	and dir_pixel_column < 400
+--			else 		x"FF" when dir_pixel_column >= 400 	and dir_pixel_column < 480
+--			else 		x"00" when dir_pixel_column >= 480 	and dir_pixel_column < 560
+--			else 		x"00";
+--		
+--	dir_green <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
+--			else 		x"FF" when dir_pixel_column >=  80 	and dir_pixel_column < 160
+--			else 		x"FF" when dir_pixel_column >= 160 	and dir_pixel_column < 240
+--			else 		x"FF" when dir_pixel_column >= 240 	and dir_pixel_column < 320
+--			else 		x"00" when dir_pixel_column >= 320 	and dir_pixel_column < 400
+--			else 		x"00" when dir_pixel_column >= 400 	and dir_pixel_column < 480
+--			else 		x"00" when dir_pixel_column >= 480 	and dir_pixel_column < 560
+--			else 		x"00";
+--
+--	dir_blue <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
+--			else 		x"00" when dir_pixel_column >=  80 	and dir_pixel_column < 160
+--			else 		x"FF" when dir_pixel_column >= 160 	and dir_pixel_column < 240
+--			else 		x"00" when dir_pixel_column >= 240 	and dir_pixel_column < 320
+--			else 		x"FF" when dir_pixel_column >= 320 	and dir_pixel_column < 400
+--			else 		x"00" when dir_pixel_column >= 400 	and dir_pixel_column < 480
+--			else 		x"FF" when dir_pixel_column >= 480 	and dir_pixel_column < 560
+--			else 		x"00";	
+		
+	dir_red <= 		x"FF"	when dir_pixel_column >=				  0	and dir_pixel_column < 		 H_RES / 8
+			else 		x"FF" when dir_pixel_column >=	   H_RES / 8	and dir_pixel_column < 		 H_RES / 4
+			else 		x"00" when dir_pixel_column >= 		H_RES / 4	and dir_pixel_column < 3 * (H_RES / 8)
+			else 		x"00" when dir_pixel_column >= 3 * (H_RES / 8)	and dir_pixel_column < 		 H_RES / 2
+			else 		x"FF" when dir_pixel_column >= 		H_RES / 2 	and dir_pixel_column < 5 * (H_RES / 8)
+			else 		x"FF" when dir_pixel_column >= 5 * (H_RES / 8) 	and dir_pixel_column < 3 * (H_RES / 4)
+			else 		x"00" when dir_pixel_column >= 3 * (H_RES / 4) 	and dir_pixel_column < 7 * (H_RES / 8)
 			else 		x"00";
 		
-	dir_green <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
-			else 		x"FF" when dir_pixel_column >=  80 	and dir_pixel_column < 160
-			else 		x"FF" when dir_pixel_column >= 160 	and dir_pixel_column < 240
-			else 		x"FF" when dir_pixel_column >= 240 	and dir_pixel_column < 320
-			else 		x"00" when dir_pixel_column >= 320 	and dir_pixel_column < 400
-			else 		x"00" when dir_pixel_column >= 400 	and dir_pixel_column < 480
-			else 		x"00" when dir_pixel_column >= 480 	and dir_pixel_column < 560
+	dir_green <= 	x"FF"	when dir_pixel_column >=   			  0 	and dir_pixel_column < 		 H_RES / 8
+			else 		x"FF" when dir_pixel_column >=	   H_RES / 8 	and dir_pixel_column < 		 H_RES / 4
+			else 		x"FF" when dir_pixel_column >= 		H_RES / 4 	and dir_pixel_column < 3 * (H_RES / 8)
+			else 		x"FF" when dir_pixel_column >= 3 * (H_RES / 8) 	and dir_pixel_column < 		 H_RES / 2
+			else 		x"00" when dir_pixel_column >= 		H_RES / 2 	and dir_pixel_column < 5 * (H_RES / 8)
+			else 		x"00" when dir_pixel_column >= 5 * (H_RES / 8) 	and dir_pixel_column < 3 * (H_RES / 4)
+			else 		x"00" when dir_pixel_column >= 3 * (H_RES / 4) 	and dir_pixel_column < 7 * (H_RES / 8)
 			else 		x"00";
 
-	dir_blue <= 	x"FF"	when dir_pixel_column >=   0 	and dir_pixel_column <	80
-			else 		x"00" when dir_pixel_column >=  80 	and dir_pixel_column < 160
-			else 		x"FF" when dir_pixel_column >= 160 	and dir_pixel_column < 240
-			else 		x"00" when dir_pixel_column >= 240 	and dir_pixel_column < 320
-			else 		x"FF" when dir_pixel_column >= 320 	and dir_pixel_column < 400
-			else 		x"00" when dir_pixel_column >= 400 	and dir_pixel_column < 480
-			else 		x"FF" when dir_pixel_column >= 480 	and dir_pixel_column < 560
-			else 		x"00";	
+	dir_blue <= 	x"FF"	when dir_pixel_column >=   			  0 	and dir_pixel_column < 		 H_RES / 8
+			else 		x"00" when dir_pixel_column >=	   H_RES / 8 	and dir_pixel_column < 		 H_RES / 4
+			else 		x"FF" when dir_pixel_column >= 		H_RES / 4 	and dir_pixel_column < 3 * (H_RES / 8)
+			else 		x"00" when dir_pixel_column >= 3 * (H_RES / 8) 	and dir_pixel_column < 		 H_RES / 2
+			else 		x"FF" when dir_pixel_column >= 		H_RES / 2 	and dir_pixel_column < 5 * (H_RES / 8)
+			else 		x"00" when dir_pixel_column >= 5 * (H_RES / 8) 	and dir_pixel_column < 3 * (H_RES / 4)
+			else 		x"FF" when dir_pixel_column >= 3 * (H_RES / 4) 	and dir_pixel_column < 7 * (H_RES / 8)
+			else 		x"00";			
 		
 		
   -- koristeci signale realizovati logiku koja pise po TXT_MEM
   --char_address
   --char_value
   --char_we
-  --Ovde se po TXT_MEM pise ko po video memoriji, pa se to periodicno siba na ekran.
-  --TXT_MEM-u se pristupa u zavisnosti od rednog broja "kvadrata" u kom se nalazi karakter (8x8 ili sta je vec u font_size...),
-  --pocevsi od gornjeg levog ugla, pa do donjeg desnog, tj.
-  --adresa karaktera u TXT_MEM je proizvod tekuceg reda (0-479) + redni broj kolone, odnosno, kvadrata u tom redu (0-639)
   
-  char_address <= txt_addr_reg;
+  --registar za indeksiranje niza
+  array_index_register : reg
+	generic map(
+		WIDTH    => 6,
+		RST_INIT => 0
+	)
+	port map(
+		i_clk  => pix_clock_s,
+		in_rst => vga_rst_n_s and tst_left_i and tst_down_i and tst_up_i and tst_down_i,
+		i_d    => next_arr_ind,
+		o_q    => arr_ind_reg
+	);
+	
+	next_arr_ind <= arr_ind_reg + 1 when writing_text_on = '1'
+	else (others => '0');
+	
+--	writing_text_on <= '1' when txt_addr_reg < (START_ROW_POS * H_RES / 16) + START_COL_POS + conv_integer(text_shift_reg)
+--							 and txt_addr_reg > (START_ROW_POS * H_RES / 16) + START_COL_POS + conv_integer(text_shift_reg) + 6
+--	else '0';
+	
+	writing_text_on <= '0' when (txt_addr_reg < conv_integer(text_ver_reg) * (H_RES / 16) + conv_integer(text_hor_reg))
+									and (txt_addr_reg > conv_integer(text_ver_reg) * (H_RES / 16) + conv_integer(text_hor_reg) + 6)
+	else '1';
+
+--	writing_text_on <= '0' when txt_addr_reg < (conv_integer(12) * (H_RES / 16)) + conv_integer(12)
+--									and txt_addr_reg > (conv_integer(12) * (H_RES / 16)) + conv_integer(12) + 6
+--	else '1';
+
+  
+  
+  char_address <= txt_addr_reg;-- + conv_integer(text_shift_reg);
+--  char_value <= text_to_screen(conv_integer(arr_ind_reg)) when writing_text_on = '1'
+--  else "100000";
+
   char_value <= text_to_screen(conv_integer(txt_addr_reg)) when txt_addr_reg < 6
   else "100000";
-  char_we <= '1' when txt_addr_reg < 1200
+  
+  char_we <= '1' when txt_addr_reg < (H_RES / 16) * (V_RES / 16)--1200
   else '0';
   
   
@@ -367,20 +720,37 @@ begin
   --pixel_value
   --pixel_we
   
-  pixel_value <= (others => '1') when	dir_pixel_row 		>	 79
-											and	dir_pixel_row 		< 	160
-											and	dir_pixel_column	>	159
-											and	dir_pixel_column	<	480
-	else (others => '0');
+--  pixel_value <= (others => '1') when	dir_pixel_row 		>	 79
+--											and	dir_pixel_row 		< 	160
+--											and	dir_pixel_column	>	159
+--											and	dir_pixel_column	<	480
+--	else (others => '0');
+--	
+--  pixel_value <= (others => '1') when	row_cnt_reg 		>=		 V_RES / 6  --80
+--											and	row_cnt_reg 		<= 5 * V_RES / 6  - 1 --399
+--											and	col_cnt_reg			>=	(H_RES / 32) / 4  --5
+--											and	col_cnt_reg			<=	(H_RES / 32) / 4 - 1 --14
+--	else (others => '0');
+	pixel_we <= '1' when row_cnt_reg < V_RES - 1
+		else '0';
+		
+--	pixel_value <= (others => '0') when row_cnt_reg < V_RES / 2 - SQUARE_DIM / 2
+--	else (others => '0') when row_cnt_reg > V_RES / 2 + SQUARE_DIM / 2 + SQUARE_DIM mod 2
+--	else (others => '0') when conv_integer(col_cnt_reg + 1) * (H_RES / 32) < conv_integer(hor_graph_reg)
+--	else (others => '0') when conv_integer(col_cnt_reg) * (H_RES / 32) >= conv_integer(hor_graph_reg) + SQUARE_DIM
+--	else pixel_value_tmp;
 	
-  pixel_we_s <= '1' when	dir_pixel_row 		>	 79
-						and	dir_pixel_row 		< 	160
-						and	dir_pixel_column	>	159
-						and	dir_pixel_column	<	480
-	else '0';
+	pixel_value_tmp(conv_integer(graph_clk_div_reg)) <= '0' when conv_integer(col_cnt_reg) * 32 + conv_integer(graph_clk_div_reg) < hor_graph_reg 
+																				  and conv_integer(col_cnt_reg) * 32 + conv_integer(graph_clk_div_reg) > hor_graph_reg + SQUARE_DIM
+		else '1';
+		
+	pixel_value <= (others => '1') when (conv_integer(row_cnt_reg) > 80)
+											and (conv_integer(row_cnt_reg) < 320)
+											and (conv_integer(col_cnt_reg) > 4)
+											and (conv_integer(row_cnt_reg) > 15)
+											else (others => '0');
+												
 	
-	pixel_we <= pixel_we_s when graph_addr_reg < 9600
-	else '0';
-	
+	pixel_address <= conv_std_logic_vector(conv_integer(row_cnt_reg) * 32 + conv_integer(col_cnt_reg), GRAPH_MEM_ADDR_WIDTH);
   
 end rtl;

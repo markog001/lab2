@@ -5,5 +5,29 @@
      behavior or data corruption.  It is strongly advised that
      users do not edit the contents of this file. -->
 <messages>
+<msg type="warning" file="HDLCompiler" num="946" delta="unknown" >"D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/lab2/HDL/synthesis/lab2/../../source/rtl/vhdl/top.vhd" Line 349: Actual for formal port <arg fmt="%s" index="1">in_rst</arg> is neither a static name nor a globally static expression
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="946" delta="unknown" >"D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/lab2/HDL/synthesis/lab2/../../source/rtl/vhdl/top.vhd" Line 364: Actual for formal port <arg fmt="%s" index="1">in_rst</arg> is neither a static name nor a globally static expression
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="946" delta="unknown" >"D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/lab2/HDL/synthesis/lab2/../../source/rtl/vhdl/top.vhd" Line 377: Actual for formal port <arg fmt="%s" index="1">in_rst</arg> is neither a static name nor a globally static expression
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="946" delta="unknown" >"D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/lab2/HDL/synthesis/lab2/../../source/rtl/vhdl/top.vhd" Line 399: Actual for formal port <arg fmt="%s" index="1">in_rst</arg> is neither a static name nor a globally static expression
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="946" delta="unknown" >"D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/lab2/HDL/synthesis/lab2/../../source/rtl/vhdl/top.vhd" Line 417: Actual for formal port <arg fmt="%s" index="1">in_rst</arg> is neither a static name nor a globally static expression
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="946" delta="unknown" >"D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/lab2/HDL/synthesis/lab2/../../source/rtl/vhdl/top.vhd" Line 685: Actual for formal port <arg fmt="%s" index="1">in_rst</arg> is neither a static name nor a globally static expression
+</msg>
+
+<msg type="warning" file="HDLCompiler" num="89" delta="unknown" >"D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/lab2/HDL/synthesis/lab2/../../source/rtl/vhdl/top.vhd" Line 270: &lt;<arg fmt="%s" index="1">oddr2</arg>&gt; remains a black-box since it has no binding entity.
+</msg>
+
+<msg type="warning" file="Simulator" num="648" delta="unknown" >&quot;<arg fmt="%s" index="1">D:/Sa diska F na staroj masini/Projekcije i Programi/ISE/RA77-2013/lab2/lab2/HDL/synthesis/lab2/../../source/rtl/vhdl/top.vhd</arg>&quot; Line <arg fmt="%d" index="2">270</arg>. Instance <arg fmt="%s" index="3">oddr2</arg> is unbound
+</msg>
+
 </messages>
 

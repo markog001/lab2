@@ -86,3 +86,8 @@ NET "blue_o[7]" IOSTANDARD = LVTTL;
 NET "direct_mode_i" LOC = W19;
 NET "display_mode_i[1]" LOC = K19;
 NET "display_mode_i[0]" LOC = Y24;
+
+NET "tst_left_i" LOC = AC23;
+NET "tst_right_i" LOC = AA24;
+NET "tst_up_i" LOC = AA23;
+NET "tst_down_i" LOC = AC24;
